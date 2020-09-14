@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * @file
+ * Installation file.
+ *
+ * Author: Remigiusz Kornaga <remkor@o2.pl>
+ */
+
+/**
+ * Implements hook_field_schema().
+ */
+function pesel_field_schema($field) {
+  $columns = array(
+    'number' => array(
+      'type' => 'char',
+      'length' => 11,
+      'not null' => FALSE,
+    ),
+  );
+
+  $indexes = array();
+
+  return array(
+    'columns' => $columns,
+    'indexes' => $indexes,
+  );
+}

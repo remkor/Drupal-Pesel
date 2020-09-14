@@ -1,0 +1,147 @@
+<?php
+
+/**
+ * @file
+ * This module adds new field type, PESEL national identification number used in Poland.
+ *
+ * Author: Remigiusz Kornaga <remkor@o2.pl>
+ */
+
+/**
+ * Implements hook_field_info().
+ */
+function pesel_field_info() {
+  return array(
+    'pesel' => array(
+      'label' => t('PESEL'),
+      'description' => t('Contains PESEL identification number.'),
+      'settings' => array('allowed_values' => array(), 'allowed_values_function' => ''),
+      'default_widget' => 'pesel',
+      'default_formatter' => 'pesel',
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_validate().
+ */
+function pesel_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
+  foreach ($items as $delta => $item) {
+    if (!empty($item['number'])) {
+      if (preg_match('/^[0-9]{11}$/', $item['number'])) {
+        $weights = array(1, 3, 7, 9, 1, 3, 7, 9, 1, 3);
+        $sum = 0;
+
+        for ($i = 0; $i < 10; $i++) {
+          $sum += $item['number'][$i] * $weights[$i];
+        }
+
+        $csum = 10 - $sum % 10;
+        $csum = ($csum == 10) ? 0 : $csum;
+
+        if ($csum != $item['number'][10]) {
+          $errors[$field['field_name']][$langcode][$delta][] = array(
+            'error' => 'pesel_invalid',
+            'message' => t('Incorrect PESEL number, a checksum has failed.'),
+          );
+        }
+      }
+      else {
+        if (ctype_digit($item['number'])) {
+          $length = strlen($item['number']);
+
+          $errors[$field['field_name']][$langcode][$delta][] = array(
+            'error' => 'pesel_invalid',
+            'message' => t('Incorrect length (@length digits) of PESEL number, it should be 11 digits.', array('@length' => $length)),
+          );
+        }
+        else {
+          $errors[$field['field_name']][$langcode][$delta][] = array(
+            'error' => 'pesel_invalid',
+            'message' => t('Incorrect character in PESEL number, only digits allowed.'),
+          );
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_field_is_empty().
+ */
+function pesel_field_is_empty($item, $field) {
+  return empty($item['number']);
+}
+
+/**
+ * Implements hook_field_widget_info().
+ */
+function pesel_field_widget_info() {
+  return array(
+    'pesel' => array(
+      'label' => t('PESEL'),
+      'field types' => array('pesel'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_widget_form().
+ */
+function pesel_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  $item = array();
+
+  $item['number'] = array(
+    '#type' => 'textfield',
+    '#size' => 11,
+    '#maxlength' => 11,
+    '#title' => check_plain((empty($element['#title'])) ? t('PESEL') : $element['#title']),
+    '#default_value' => (empty($items[$delta]['number'])) ? '' : $items[$delta]['number'],
+    '#attributes' => array('class' => array('pesel-number-input')),
+    '#description' => check_plain((empty($element['#description'])) ? t('11-digit PESEL number. Only digits allowed.') : $element['#description']),
+  );
+
+  return $item;
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function pesel_field_formatter_info() {
+  return array(
+    'pesel' => array(
+      'label' => t('PESEL'),
+      'field types' => array('pesel'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function pesel_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+
+  foreach ($items as $delta => $item) {
+    $element[$delta] = array(
+      '#markup' => theme('pesel', array(
+        'element' => $item,
+        'field' => $instance,
+      )),
+    );
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function pesel_theme() {
+  return array(
+    'pesel' => array(
+      'variables' => array('element' => NULL, 'field' => NULL),
+      'file' => 'pesel.theme',
+    ),
+  );
+}

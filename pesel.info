@@ -1,0 +1,6 @@
+name = Pesel
+description = Defines a new field type, PESEL national identification number used in Poland.
+package = Fields
+core = 7.x
+dependencies[] = field
+dependencies[] = text

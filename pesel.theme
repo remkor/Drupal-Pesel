@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * @file
+ * This file contains theme function for PESEL field.
+ *
+ * Author: Remigiusz Kornaga <remkor@o2.pl>
+ */
+
+/**
+ * Theme function for PESEL field.
+ */
+function theme_pesel($variables) {
+  $output = '';
+
+  if (!empty($variables['element']['number'])) {
+    $output .= '<div><span>' . $variables['element']['number'] . '</span></div>';
+  }
+
+  return $output;
+}
